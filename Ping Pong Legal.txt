@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo do Ping Pong</title>
+  <style>
+    body {
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+
+    canvas {
+      border: 15px solid blue;
+      background-color: brown;
+    }
+
+
+    #placar {
+      color: white;
+      font-family: sans-serif;
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+
+    #mensagemFinal {
+      color: yellow;
+      font-family: sans-serif;
+      font-size: 28px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+
+<body>
+  <div id="placar">Jogador: 0 | CPU: 0</div>
+  <canvas id="telaJogo" width="400" height="400">Seu navegador não funciona o Canvas no HTML5.</canvas>
+  <div id="mensagemFinal"></div>
+
+
+  <script>
+    const tela = document.getElementById("telaJogo");
+    const contexto = tela.getContext("2d");
+    const placar = document.getElementById("placar");
+    const mensagemFinal = document.getElementById("mensagemFinal");
+
+
+    const alturaRaquete = 80;
+    const larguraRaquete = 10;
+    const raioBola = 7;
+
+
+    let jogador1 = tela.height / 2 - alturaRaquete / 2;
+    let cpu = tela.height / 2 - alturaRaquete / 2;
+    let bolaY = tela.width / 2;
+    let bolaX = tela.height / 2;
+    let velocidadeBolaX = 4;
+    let velocidadeBolaY = 4;
+
+
+    let pontosJogador = 0;
+    let pontosCPU = 0;
+    let jogoAtivo = true;
+
+
+    document.addEventListener('mousemove', (evento) => {
+      let retangulo = tela.getBoundingClientRect();
+      jogador1 = evento.clientY - retangulo.top - alturaRaquete / 2;
+    });
+
+
+    function raquete(x, y, largura, altura, cor) {
+      contexto.fillStyle = cor;
+      contexto.fillRect(x, y, largura, altura);
+    }
+
+
+    function bola(x, y, raio, cor) {
+      contexto.fillStyle = cor;
+      contexto.beginPath();
+      contexto.arc(x, y, raio, 0, Math.PI * 2);
+      contexto.fill();
+    }
+
+
+    function reiniciarBola() {
+      bolaX = tela.width / 2;
+      bolaY = tela.height / 2;
+      velocidadeBolaX = -velocidadeBolaX;
+      velocidadeBolaY = 4;
+    }
+
+
+    function desenharJogo() {
+      raquete(0, 0, tela.width, tela.height, "brown");
+      raquete(10, jogador1, larguraRaquete, alturaRaquete, "white");
+      raquete(tela.width - 20, cpu, larguraRaquete, alturaRaquete, "black");
+      bola(bolaX, bolaY, raioBola, 'green');
+    }
+
+
+    function atualizarJogo() {
+      if (!jogoAtivo) return;
+
+
+      bolaX += velocidadeBolaX;
+      bolaY += velocidadeBolaY;
+
+
+      if (bolaY + raioBola > tela.height || bolaY - raioBola < 0) {
+        velocidadeBolaY = -velocidadeBolaY;
+      }
+
+
+      // CPU LENTA (dificuldade menor)
+      cpu += ((bolaY - (cpu + alturaRaquete / 2))) * 0.05;
+
+
+      if (bolaX - raioBola < 20 && bolaY > jogador1 && bolaY < jogador1 + alturaRaquete) {
+        velocidadeBolaX = -velocidadeBolaX;
+      }
+
+
+      if (bolaX + raioBola > tela.width - 20 && bolaY > cpu && bolaY < cpu + alturaRaquete) {
+        velocidadeBolaX = -velocidadeBolaX;
+      }
+
+
+      if (bolaX < 0) {
+        pontosCPU++;
+        atualizarPlacar();
+        verificarFimDeJogo();
+        reiniciarBola();
+      }
+
+
+      if (bolaX > tela.width) {
+        pontosJogador++;
+        atualizarPlacar();
+        verificarFimDeJogo();
+        reiniciarBola();
+      }
+    }
+
+
+    function atualizarPlacar() {
+      placar.textContent = `Jogador: ${pontosJogador} | CPU: ${pontosCPU}`;
+    }
+
+
+    function verificarFimDeJogo() {
+      if (pontosJogador >= 5 || pontosCPU >= 5) {
+        jogoAtivo = false;
+        const vencedor = pontosJogador >= 5 ? "Jogador" : "CPU";
+        mensagemFinal.textContent = `${vencedor} venceu o jogo!`;
+      }
+    }
+
+
+    function loopJogo() {
+      atualizarJogo();
+      desenharJogo();
+      if (jogoAtivo) requestAnimationFrame(loopJogo);
+    }
+
+
+    loopJogo();
+  </script>
+</body>
+
+
+</html>
